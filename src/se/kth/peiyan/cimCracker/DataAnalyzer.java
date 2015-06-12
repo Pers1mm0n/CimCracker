@@ -18,13 +18,18 @@ import org.w3c.dom.Text;
 
 /**
  * this class is responsible for:
- * 1) Database connection,
- * 2) read metadata (table, column) and data from database,
- * 3) create new table in a database
- * 3) populate table in database,
+ * <ul style="list-style-type:disc">
+ *  <li>Database connection,</li>
+ *  <li>read metadata (table, column) and data from database</li>
+ *  <li>create new table in a database</li>
+ *  <li>populate table in database</li>
+ *  <li>get the 'name' attributes from specific table</li>
+ *  <li>prepare clustering objects; add and populate 'dataObjects' table into database.</li>
+ *  <li>calculate centroid for each class; add and populate 'clust_xx' table into database.</li>
+ * </ul> 
  * 
  * @author peiyanli
- * @version 0.1, May 16, 2015
+ * @version 0.2, June 12, 2015
  */
 public class DataAnalyzer
 {
@@ -160,12 +165,70 @@ public class DataAnalyzer
     
     /**
      * get database connection
+     * 
+     * @return database connection
      */
     public Connection getConn()
     {
         return conn;
     }
-
+    
+    /**
+     * get the 'name' attributes from specific table
+     * 
+     * @param tableName
+     * @return 'name' attribute
+     */
+    public String[] getNames(String tableName)
+    {
+        ArrayList<String> returnList = new ArrayList<>();
+        try
+        {
+            ResultSet resultSet = statement.executeQuery("SELECT name FROM " + tableName + " GROUP BY name;");
+            while (resultSet.next())
+            {
+                returnList.add(resultSet.getString(1));
+            }
+        } catch (SQLException ex) {
+            // handle any errors
+            System.out.println("SQLException: " + ex.getMessage());
+            System.out.println("SQLState: " + ex.getSQLState());
+            System.out.println("VendorError: " + ex.getErrorCode());
+        }
+        return returnList.toArray(new String[returnList.size()]);
+    }
+    
+    /**
+     * <p>update database: adding and populating 'dataObjects' table into database.</p>
+     * <p>return internal data structure ArrayList&lt;DataObject&gt; representing data objects</p>
+     * 
+     * @param selectedAttributes specific which attributes (got from 'name' from 'analog_means' table) shall be added into the 'dataObjects' table 
+     * @param tableName specific table where one can fetch the corresponding data, usually the same 'tableName' used in 'getNames()' method
+     * @return ArrayList&lt;DataObject&gt; a list of data objects with dimensions of attributes 
+     */
+    public ArrayList<DataObject> updateDataObjects(ArrayList<String> selectedAttributes, String tableName)
+    {
+        return KMeanClustering.prepareDataObject(statement, selectedAttributes, tableName);
+    }
+    
+    /**
+     * <p>update database: adding and populating 'clust_xx' table into database.</p>
+     * <p>return internal data structure ArrayList&lt;Centroid&gt; representing a list of cluster centroids</p>
+     * 
+     * @param dataObjects
+     * @param kNumber
+     * @param isRandomInitializationNeeded
+     * @return ArrayList&lt;Centroid&gt; a list of centroids representing the centroid of each cluster
+     */
+    public ArrayList<Centroid> updateCluster(ArrayList<DataObject> dataObjects, int kNumber, boolean isRandomInitializationNeeded)
+    {
+        return KMeanClustering.clustering(statement, dataObjects, kNumber, isRandomInitializationNeeded);
+    }
+    
+    public void updateStateForKNN(ArrayList<String> selectedAttributes, String tableName, ArrayList<DataObject> dataObjects, int kNumber)
+    {
+        KNearestNeighbor.tagState(statement, selectedAttributes, tableName, dataObjects, kNumber);
+    }
     /**
      * create new table
      * 

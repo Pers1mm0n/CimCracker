@@ -6,6 +6,7 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
@@ -19,7 +20,7 @@ import org.w3c.dom.Document;
  * this is the entry of the whole application as well the frame of the whole UI
  * 
  * @author peiyanli
- * @version 0.1, May 16, 2015
+ * @version 0.2, June 12, 2015
  */
 public class MainFrame extends javax.swing.JFrame
 {
@@ -62,6 +63,9 @@ public class MainFrame extends javax.swing.JFrame
         mntmExportData = new javax.swing.JMenuItem();
         javax.swing.JMenu mnDataManipulation = new javax.swing.JMenu();
         mntmTransMatrix = new javax.swing.JMenuItem();
+        javax.swing.JPopupMenu.Separator jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        mntmClusterData = new javax.swing.JMenuItem();
+        mntmTagState = new javax.swing.JMenuItem();
         javax.swing.JMenu mnHelp = new javax.swing.JMenu();
         javax.swing.JMenuItem mntmAbout = new javax.swing.JMenuItem();
 
@@ -158,6 +162,29 @@ public class MainFrame extends javax.swing.JFrame
         mnDataManipulation.add(mntmTransMatrix);
 
         mnData.add(mnDataManipulation);
+        mnData.add(jSeparator2);
+
+        mntmClusterData.setText("Cluster Data");
+        mntmClusterData.setEnabled(false);
+        mntmClusterData.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                mntmClusterDataActionPerformed(evt);
+            }
+        });
+        mnData.add(mntmClusterData);
+
+        mntmTagState.setText("Tag State");
+        mntmTagState.setEnabled(false);
+        mntmTagState.addActionListener(new java.awt.event.ActionListener()
+        {
+            public void actionPerformed(java.awt.event.ActionEvent evt)
+            {
+                mntmTagStateActionPerformed(evt);
+            }
+        });
+        mnData.add(mntmTagState);
 
         menuBar.add(mnData);
 
@@ -262,6 +289,7 @@ public class MainFrame extends javax.swing.JFrame
             {
                 lblProcessInfo.setText("Connect to database successful");
                 mntmOpenDatabase.setEnabled(true);
+                mntmClusterData.setEnabled(true);
                 isDataExportEnable += 0b10;
                 if (isDataExportEnable == 0b11)
                     mntmExportData.setEnabled(true);
@@ -369,6 +397,51 @@ public class MainFrame extends javax.swing.JFrame
         aboutInfo.setVisible(true);
     }//GEN-LAST:event_mntmAboutActionPerformed
 
+    private void mntmClusterDataActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_mntmClusterDataActionPerformed
+    {//GEN-HEADEREND:event_mntmClusterDataActionPerformed
+        DlgClustering dlgClustering = new DlgClustering(this, true, databaseAnalyzer);
+        dlgClustering.setLocationRelativeTo(this);
+        dlgClustering.setVisible(true);
+        if (dlgClustering.getReturnStatus() == DlgClustering.RET_OK)
+        {
+            dbViewer = new PnlTableViewer(this, databaseAnalyzer);
+            Component component = pnlMain.getComponent(0);
+            if (component instanceof PnlTableViewer)
+            {
+                if (dbViewer == null)
+                dbViewer = new PnlTableViewer(this, databaseAnalyzer);
+                update(dbViewer);
+                this.repaint();
+                setPocessLabel("Table Updated");
+            }
+            dataObjects = dlgClustering.getDataObjects();
+            selectecAttributeFromCluster = dlgClustering.getSelectedAttributes();
+            mntmTagState.setEnabled(true);
+        }
+        //System.out.println(dataObjects);
+    }//GEN-LAST:event_mntmClusterDataActionPerformed
+
+    private void mntmTagStateActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_mntmTagStateActionPerformed
+    {//GEN-HEADEREND:event_mntmTagStateActionPerformed
+        // TODO add your handling code here:
+        DlgTagState dlgTagState = new DlgTagState(this, true, databaseAnalyzer, selectecAttributeFromCluster, dataObjects);
+        dlgTagState.setLocationRelativeTo(this);
+        dlgTagState.setVisible(true);
+        if (dlgTagState.getReturnStatus() == DlgTagState.RET_OK)
+        {
+            dbViewer = new PnlTableViewer(this, databaseAnalyzer);
+            Component component = pnlMain.getComponent(0);
+            if (component instanceof PnlTableViewer)
+            {
+                if (dbViewer == null)
+                dbViewer = new PnlTableViewer(this, databaseAnalyzer);
+                update(dbViewer);
+                this.repaint();
+                setPocessLabel("Table Updated");
+            }
+        }
+    }//GEN-LAST:event_mntmTagStateActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -424,8 +497,10 @@ public class MainFrame extends javax.swing.JFrame
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel lblProcessInfo;
     private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem mntmClusterData;
     private javax.swing.JMenuItem mntmExportData;
     private javax.swing.JMenuItem mntmOpenDatabase;
+    private javax.swing.JMenuItem mntmTagState;
     private javax.swing.JMenuItem mntmTransMatrix;
     private javax.swing.JMenuItem mntmXMLViwer;
     private javax.swing.JPanel pnlMain;
@@ -441,4 +516,6 @@ public class MainFrame extends javax.swing.JFrame
     private int isDataExportEnable;
     private Document doc;
     private XMLExporter xmlExporter;
+    private ArrayList<DataObject> dataObjects;
+    private ArrayList<String> selectecAttributeFromCluster;
 }

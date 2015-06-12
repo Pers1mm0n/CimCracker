@@ -12,7 +12,7 @@ import javax.swing.KeyStroke;
  * Dialog asking user to enter database connection info
  *
  * @author peiyanli
- * @version 0.1, May 16, 2015
+ * @version 0.2, June 12, 2015
  */
 public class DlgDatabaseChooser extends javax.swing.JDialog {
 
@@ -140,7 +140,7 @@ public class DlgDatabaseChooser extends javax.swing.JDialog {
 
         lblDatabaseName.setText("Database");
 
-        txtfdDatabase.setText("cimDatabase");
+        txtfdDatabase.setText("substations");
 
         lblUser.setText("Username");
 
